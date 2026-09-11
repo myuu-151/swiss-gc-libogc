@@ -249,6 +249,9 @@ enum patchIds {
 
 #define LO_RESERVE 0x80000C00
 #define HI_RESERVE 0x80003000
+/* Offset of the low-memory snapshot buffer inside the DVDReadPrioLibogc blob;
+   must match DVDReadPrioLibogc_backup in patches/base/dvdreadprio.S. */
+#define DVD_READPRIO_BACKUP_OFF 0x20
 
 /* Function jump locations for the hypervisor */
 #define DSI_EXCEPTION_VECTOR (u32 *)(LO_RESERVE + 0x01C)

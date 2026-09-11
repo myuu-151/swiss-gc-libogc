@@ -190,6 +190,15 @@ int install_code(int final)
 			memcpy((void *)0x80000000, VAR_AREA, sizeof(VAR_AREA));
 			DCFlushRangeNoSync((void *)0x80000000, sizeof(VAR_AREA)); _sync();
 			ICInvalidateRange((void *)0x80000000, sizeof(VAR_AREA));
+			/* Snapshot the finished low-memory image into the libogc DVD_ReadPrio
+			   shim so it can restore Swiss's world for each disc read after libogc
+			   clobbers low memory. Only if the shim was actually installed (i.e.
+			   the game had a libogc DVD_ReadPrio to redirect). */
+			if (patch_locations[DVD_READPRIO_LIBOGC_HOOK]) {
+				void *backup = (u8 *)patch_locations[DVD_READPRIO_LIBOGC_HOOK] + DVD_READPRIO_BACKUP_OFF;
+				memcpy(backup, VAR_AREA, sizeof(VAR_AREA));
+				DCFlushRange(backup, sizeof(VAR_AREA));
+			}
 			if (top_addr != 0x81800000)
 				mtspr(DABR, 0x800000E8 | 0b110);
 			mtspr(EAR, 0x8000000C);

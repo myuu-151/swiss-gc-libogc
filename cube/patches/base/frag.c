@@ -162,25 +162,37 @@ int frag_read_write(int file, void *buffer, uint32_t length, uint32_t offset, bo
 	return 0;
 }
 /*
- * Swiss fork addition: serve libogc's synchronous DVD_ReadPrio() straight from
- * the mounted disc image, so an on-disc libogc ISO reads its assets under Swiss.
- * The game's DVD_ReadPrio is patched (patcher.c) to branch to the base-runtime
- * jump-table slot `b DVDReadPrio_libogc`, which lands here. Args arrive in
- * libogc's register layout (verified by disassembly): r4=buffer, r5=length,
- * r7=offset_hi, r8=offset, r9=prio, with r6 an unused gap -- so this C parameter
- * order maps the incoming registers correctly.
+ * Swiss fork addition: synchronous disc read for the libogc DVD_ReadPrio env-swap
+ * shim (patches/base/dvdreadprio.S). libogc reinstalls the PPC exception vectors
+ * on boot, which flattens Swiss's entire low-memory world (VAR state at 0x9xx AND
+ * this base runtime at 0xC00-0x3000). The high-memory shim works around that: it
+ * masks interrupts, restores Swiss's low memory from a snapshot, then branches to
+ * the base-runtime jump-table slot `b DVDReadPrio_libogc` (base.S, 0x80000D14)
+ * with the request already unpacked into the standard PPC argument registers
+ * (r3=file, r4=buffer, r5=length, r6=offset), and puts libogc's low memory back
+ * afterwards. So by the time we run here, VAR_FRAG_LIST etc. are valid again.
+ *
+ * We just walk the fragment list and read each piece synchronously with the
+ * polled do_read_write(); the shim owns interrupt masking and cache coherency.
  */
-int DVDReadPrio_libogc(void *block, void *buffer, int length,
-                       int r6_unused, int offset_hi, int offset, int prio)
+int DVDReadPrio_libogc(int file, void *buffer, uint32_t length, uint32_t offset)
 {
-	void *uncached = (void *)((uintptr_t)buffer | 0xC0000000);
-	int read = frag_read_complete(*VAR_CURRENT_DISC, uncached, length, offset);
+	uint32_t done = 0;
 
-	/* Drop stale cached lines so the game's cached reads refetch from memory. */
-	for (int i = 0; i < length; i += 32)
-		asm volatile ("dcbi 0,%0" :: "r"((uint8_t *)buffer + i) : "memory");
-	asm volatile ("sync");
+	while (done < length) {
+		frag_t frag;
 
-	return read >= length ? length : -100;  /* -100 = shim ran, frag short; -1 = shim never ran */
+		if (!frag_get(file, offset + done, length - done, &frag))
+			break;
+
+		int read = do_read_write((uint8_t *)buffer + done, frag.size,
+		                         frag.offset, frag.sector, false);
+		if (read <= 0)
+			break;
+
+		done += read;
+	}
+
+	return done;
 }
 
