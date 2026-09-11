@@ -66,6 +66,8 @@ void *installPatch(int patchId) {
 			patch = OSSetArenaHiHook; patchSize = OSSetArenaHiHook_size; break;
 		case PAD_CHECKSTATUS:
 			patch = CheckStatus_bin; patchSize = CheckStatus_bin_size; break;
+		case DVD_READPRIO_LIBOGC_HOOK:
+			patch = DVDReadPrioLibogc_bin; patchSize = DVDReadPrioLibogc_bin_size; break;
 		case PAD_CHECKSTATUS_GCDIGITAL:
 			patch = CheckStatusGCDigital_bin; patchSize = CheckStatusGCDigital_bin_size; break;
 		case VI_CONFIGURE240P:
@@ -1814,7 +1816,7 @@ int Patch_Hypervisor(u32 *data, u32 length, int dataType)
 			data[i + 3] == 0x93E1000C && data[i + 4] == 0x7C7F1B78 &&
 			data[i + 5] == 0x7D234B78) {
 			u32 *addr = Calc_ProperAddress(data, dataType, i * sizeof(u32));
-			data[i] = branch(DVD_READPRIO_LIBOGC, addr);
+			data[i] = branch((u32*)getPatchAddr(DVD_READPRIO_LIBOGC_HOOK), addr);
 		}
 		
 		if ((data[i - 1] != 0x4E800020 &&

@@ -19,6 +19,7 @@ typedef struct FuncPattern
 } FuncPattern;
 
 /* the SDGecko/IDE-EXI patches */
+#include "DVDReadPrioLibogc_bin.h"
 #include "sd_v1_bin.h"
 #include "sd_v1_card_bin.h"
 #include "sd_v1_dtk_bin.h"
@@ -242,6 +243,7 @@ enum patchIds {
 	VI_CONFIGUREPANHOOKD,
 	VI_GETRETRACECOUNTHOOK,
 	VI_RETRACEHANDLERHOOK,
+	DVD_READPRIO_LIBOGC_HOOK,
 	PATCHES_MAX
 };
 

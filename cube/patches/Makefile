@@ -66,6 +66,10 @@ cpatches:
 	@$(BIN2S) -H $(DEST)/CheckStatus_bin.h CheckStatus.bin > $(DEST)/CheckStatus.bin.s
 	@$(BIN2S) -H $(DEST)/CheckStatusGCDigital_bin.h CheckStatusGCDigital.bin > $(DEST)/CheckStatusGCDigital.bin.s
 	@$(BIN2S) -H $(DEST)/WriteUARTN_bin.h WriteUARTN.bin > $(DEST)/WriteUARTN.bin.s
+	@$(CC) -O3 $(OPTS) -c base/dvdreadprio.S
+	@$(CC) -O3 $(OPTS) -o DVDReadPrioLibogc.elf -e DVDReadPrioLibogc -T base/common.ld -T base/dolphin/os.ld dvdreadprio.o
+	@$(OBJCOPY) -O binary DVDReadPrioLibogc.elf DVDReadPrioLibogc.bin
+	@$(BIN2S) -H $(DEST)/DVDReadPrioLibogc_bin.h DVDReadPrioLibogc.bin > $(DEST)/DVDReadPrioLibogc.bin.s
 	@rm -f *.bin *.elf *.o
 
 stub.bin:
