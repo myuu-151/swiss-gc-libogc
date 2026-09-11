@@ -1813,8 +1813,8 @@ int Patch_Hypervisor(u32 *data, u32 length, int dataType)
 			data[i + 0] == 0x28070001 && data[i + 2] == 0x9421FFF0 &&
 			data[i + 3] == 0x93E1000C && data[i + 4] == 0x7C7F1B78 &&
 			data[i + 5] == 0x7D234B78) {
-			data[i + 0] = 0x3860FFC9;   /* li  r3, -55  (diagnostic sentinel) */
-			data[i + 1] = 0x4E800020;   /* blr */
+			u32 *addr = Calc_ProperAddress(data, dataType, i * sizeof(u32));
+			data[i] = branch(DVD_READPRIO_LIBOGC, addr);
 		}
 		
 		if ((data[i - 1] != 0x4E800020 &&
