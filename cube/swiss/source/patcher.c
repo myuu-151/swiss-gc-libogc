@@ -1807,6 +1807,16 @@ int Patch_Hypervisor(u32 *data, u32 length, int dataType)
 	}
 	
 	for (i = 0; i < length / sizeof(u32); i++) {
+		/* libogc DVD_ReadPrio starts with cmplwi (not mflr/stwu), so the loop's
+		   prologue gate below skips it -- scan for it here, before those gates. */
+		if (i + 5 < length / sizeof(u32) &&
+			data[i + 0] == 0x28070001 && data[i + 2] == 0x9421FFF0 &&
+			data[i + 3] == 0x93E1000C && data[i + 4] == 0x7C7F1B78 &&
+			data[i + 5] == 0x7D234B78) {
+			data[i + 0] = 0x3860FFC9;   /* li  r3, -55  (diagnostic sentinel) */
+			data[i + 1] = 0x4E800020;   /* blr */
+		}
+		
 		if ((data[i - 1] != 0x4E800020 &&
 			(data[i - 1] != 0x00000000 || data[i - 2] != 0x4E800020) &&
 			(data[i - 1] != 0x00000000 || data[i - 2] != 0x00000000 || data[i - 3] != 0x4E800020) &&
@@ -4220,14 +4230,6 @@ int Patch_Hypervisor(u32 *data, u32 length, int dataType)
 					}
 				}
 			}
-		}
-		
-		if (i + 5 < length / sizeof(u32) &&
-			data[i + 0] == 0x28070001 && data[i + 2] == 0x9421FFF0 &&
-			data[i + 3] == 0x93E1000C && data[i + 4] == 0x7C7F1B78 &&
-			data[i + 5] == 0x7D234B78) {
-			data[i + 0] = 0x3860FFC9;   /* li  r3, -55  (diagnostic sentinel) */
-			data[i + 1] = 0x4E800020;   /* blr */
 		}
 		
 		for (j = 0; j < countof(DVDLowReadSigs); j++) {
