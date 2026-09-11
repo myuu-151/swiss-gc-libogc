@@ -90,6 +90,7 @@ _start:
 	b		dispatch_interrupt
 	b		idle_thread
 	b		fini
+	b		DVDReadPrio_libogc
 
 unhandled_exception:
 	mtcr	r4

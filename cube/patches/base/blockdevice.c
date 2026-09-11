@@ -139,3 +139,26 @@ void reset_devices(void)
 	reset_device();
 	ipl_set_config(1);
 }
+
+/*
+ * Swiss fork addition: serve libogc's synchronous DVD_ReadPrio() straight from
+ * the mounted disc image, so an on-disc libogc ISO reads its assets under Swiss.
+ * The game's DVD_ReadPrio is patched (patcher.c) to branch to the base-runtime
+ * jump-table slot `b DVDReadPrio_libogc`, which lands here. Args arrive in
+ * libogc's register layout (verified by disassembly): r4=buffer, r5=length,
+ * r7=offset_hi, r8=offset, r9=prio, with r6 an unused gap -- so this C parameter
+ * order maps the incoming registers correctly.
+ */
+int DVDReadPrio_libogc(void *block, void *buffer, int length,
+                       int r6_unused, int offset_hi, int offset, int prio)
+{
+	void *uncached = (void *)((uintptr_t)buffer | 0xC0000000);
+	int read = frag_read_complete(*VAR_CURRENT_DISC, uncached, length, offset);
+
+	/* Drop stale cached lines so the game's cached reads refetch from memory. */
+	for (int i = 0; i < length; i += 32)
+		asm volatile ("dcbi 0,%0" :: "r"((uint8_t *)buffer + i) : "memory");
+	asm volatile ("sync");
+
+	return read >= length ? length : -1;
+}

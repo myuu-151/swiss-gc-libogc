@@ -1485,6 +1485,8 @@ int Patch_Hypervisor(u32 *data, u32 length, int dataType)
 		{ 21, 9, 8, 1, 0, 2, NULL, 0, "DoJustReadD" },
 		{ 13, 5, 4, 1, 0, 2, NULL, 0, "DoJustRead" }
 	};
+	FuncPattern DVDReadPrioLibogcSig =
+		{ 60, 12, 11, 2, 6, 4, NULL, 0, "DVD_ReadPrio (libogc)" };
 	FuncPattern DVDLowReadSigs[6] = {
 		{ 157,  70,  6, 13, 12, 13, NULL, 0, "DVDLowReadD" },
 		{ 157,  70,  6, 13, 12, 13, NULL, 0, "DVDLowReadD" },
@@ -4220,6 +4222,12 @@ int Patch_Hypervisor(u32 *data, u32 length, int dataType)
 					}
 				}
 			}
+		}
+		
+		if (compare_pattern(&fp, &DVDReadPrioLibogcSig)) {
+			u32 *addr = Calc_ProperAddress(data, dataType, i * sizeof(u32));
+			data[i] = branch(DVD_READPRIO_LIBOGC, addr);
+			print_debug("Patched libogc DVD_ReadPrio @ %08X\n", (u32)addr);
 		}
 		
 		for (j = 0; j < countof(DVDLowReadSigs); j++) {

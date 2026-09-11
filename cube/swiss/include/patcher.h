@@ -254,6 +254,7 @@ enum patchIds {
 #define DISPATCH_INTERRUPT   (u32 *)(LO_RESERVE + 0x108)
 #define IDLE_THREAD          (u32 *)(LO_RESERVE + 0x10C)
 #define FINI                 (u32 *)(LO_RESERVE + 0x110)
+#define DVD_READPRIO_LIBOGC  (u32 *)(LO_RESERVE + 0x114)
 
 /* Types of files we may patch */
 enum patchTypes {
