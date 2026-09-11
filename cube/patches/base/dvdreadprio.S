@@ -36,6 +36,11 @@
  *   so LR still points at DVD_ReadPrio's caller -- we finish the job and blr).
  */
 
+#define _LANGUAGE_ASSEMBLY
+#include "asm.h"
+
+	.section .text
+
 	.set	LOWMEM_BASE_HI,	0x8000		/* 0x80000000 */
 	.set	LOWMEM_WORDS,	0x3100/4	/* 0xC40 words to copy   */
 	.set	LOWMEM_LINES,	0x3100/32	/* 0x188 cache lines     */
