@@ -181,6 +181,6 @@ int DVDReadPrio_libogc(void *block, void *buffer, int length,
 		asm volatile ("dcbi 0,%0" :: "r"((uint8_t *)buffer + i) : "memory");
 	asm volatile ("sync");
 
-	return read >= length ? length : -1;
+	return read >= length ? length : -100;  /* -100 = shim ran, frag short; -1 = shim never ran */
 }
 
